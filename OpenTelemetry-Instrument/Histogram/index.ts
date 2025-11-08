@@ -1,4 +1,5 @@
 import {
+  AggregationTemporality,
   MeterProvider,
   PeriodicExportingMetricReader,
 } from "@opentelemetry/sdk-metrics";
@@ -17,7 +18,7 @@ const ENDPOINT = process.env.COLLECTOR_ENDOPOINT;
 
 const resource = defaultResource().merge(
   resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: "hg-test-service",
+    [ATTR_SERVICE_NAME]: "hg-test-hg-service",
     [ATTR_SERVICE_VERSION]: "1.0.0",
   })
 );
@@ -26,6 +27,7 @@ const reader = new PeriodicExportingMetricReader({
   exporter: new OTLPMetricExporter({
     url: `${ENDPOINT}/v1/metrics`,
     headers: {},
+    temporalityPreference: AggregationTemporality.DELTA
   }),
   exportIntervalMillis: 5000,
 });
@@ -39,11 +41,11 @@ metrics.setGlobalMeterProvider(provider);
 
 const meter = metrics.getMeter("demo-histogram");
 
-const histogram = meter.createHistogram("request-duration", {
+const histogram = meter.createHistogram("kloudmate.duration", {
   description: "The duration of the request",
   unit: "ms",
   advice: {
-    explicitBucketBoundaries: [50, 100, 200, 500, 1000],
+    explicitBucketBoundaries: [5, 10, 20, 50, 100],
   },
 });
 
@@ -52,7 +54,7 @@ function randomInRange(min: number, max: number): number {
 }
 
 setInterval(() => {
-  const value = randomInRange(50, 1000);
+  const value = randomInRange(1, 100);
   histogram.record(value);
   console.log(`Recorded value: ${value}`);
 }, 1000);

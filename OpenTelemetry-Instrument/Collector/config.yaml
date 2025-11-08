@@ -1,4 +1,17 @@
 receivers:
+  filelog:
+    include:
+      - /var/log/clickhouse-server/clickhouse-server.log
+      - /var/log/clickhouse-server/clickhouse-server.err.log
+    start_at: beginning
+    
+  hostmetrics:
+    collection_interval: 5s
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
   otlp:
     protocols:
       grpc:
@@ -16,10 +29,23 @@ exporters:
     verbosity: detailed
   prometheus:
     endpoint: "0.0.0.0:8889" 
+  otlphttp:
+    endpoint: "https://otel.kloudmate.dev:4318"
+    headers: 
+      Authorization: x
+    timeout: 5s
 
 service:
   pipelines:
-    metrics:
+    logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, prometheus]
+      exporters: [otlphttp, debug]
+    metrics:
+      receivers: [otlp, hostmetrics]
+      processors: [batch]
+      exporters: [otlphttp, debug]
+    traces:
+      receivers: [otlp]    
+      processors: [batch] 
+      exporters: [otlphttp, debug]

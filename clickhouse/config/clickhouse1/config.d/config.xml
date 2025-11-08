@@ -27,8 +27,6 @@
                     <host>clickhouse1</host>
                     <port>9000</port>
                 </replica>
-            </shard>
-            <shard>
                 <replica>
                     <host>clickhouse2</host>
                     <port>9000</port>
@@ -36,15 +34,15 @@
             </shard>
         </chcluster>
     </remote_servers>
-
     <macros>
         <shard>1</shard>
         <replica>clickhouse1</replica>
     </macros>
 
     <distributed_ddl>
-    <path>/clickhouse/task_queue/ddl</path>
-</distributed_ddl>
+        <pool_size>1</pool_size>
+        <path>/clickhouse/task_queue/ddl</path>
+    </distributed_ddl>
 
     <default_replica_path>/clickhouse/tables/{shard}/{table}</default_replica_path>
     <default_replica_name>{replica}</default_replica_name>
@@ -63,8 +61,13 @@
         </local_directory>
     </user_directories>
 
-    <allow_plaintext_password>1</allow_plaintext_password>
     <allow_no_password>1</allow_no_password>
+
+    <http_server_default_response_headers>
+        <Access-Control-Allow-Origin>*</Access-Control-Allow-Origin>
+        <Access-Control-Allow-Methods>GET, POST, OPTIONS</Access-Control-Allow-Methods>
+        <Access-Control-Allow-Headers>Authorization, Accept, Content-Type</Access-Control-Allow-Headers>
+    </http_server_default_response_headers>
 
     <query_log>
         <database>system</database>

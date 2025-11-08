@@ -1,5 +1,5 @@
 import {
-  AggregationType,
+  AggregationTemporality,
   MeterProvider,
   PeriodicExportingMetricReader,
 } from "@opentelemetry/sdk-metrics";
@@ -27,36 +27,42 @@ const reader = new PeriodicExportingMetricReader({
   exporter: new OTLPMetricExporter({
     url: `${ENDPOINT}/v1/metrics`,
     headers: {},
+    temporalityPreference: AggregationTemporality.DELTA
   }),
-  exportIntervalMillis: 5000,
+  exportIntervalMillis: 1000,
 });
 
 const provider = new MeterProvider({
   resource: resource,
   readers: [reader],
-  views: [
-    {
-      aggregation: { type: AggregationType.EXPONENTIAL_HISTOGRAM,  options: {maxSize: 5}},
-      instrumentName: "request-duration-exp",
-    },
-  ],
 });
 
 metrics.setGlobalMeterProvider(provider);
 
-const meter = metrics.getMeter("demo-histogram");
+const meter = metrics.getMeter("demo-gauge");
 
-const exponential_histogram = meter.createHistogram("request-duration-exp", {
-  description: "The duration of the request",
-  unit: "ms",
+const gauge = meter.createGauge('request.count', {
+  description: "The number of requests",
+  unit: "1"
 });
 
 function randomInRange(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
+  return Math.floor(Math.random() * (max - min) + min);
 }
 
+// for (let i = 0; i < 10; i++) {
+//   const value = 5;
+//   gauge.record(value);
+//   console.log(`Recorded value: ${value}`);
+// }
+
 setInterval(() => {
-  const value = randomInRange(-5, 10);
-  exponential_histogram.record(value);
-  console.log(`Recorded value: ${value}`);
-}, 1000);
+    const value = randomInRange(1,10)
+    gauge.record(value);
+    console.log(`Recorded value: ${value}`);
+}, 5000);
+
+// setTimeout(async () => {
+//     console.debug('MeterProvider shutdown complete.');
+//     await provider.shutdown();
+// }, 70000);
